@@ -1,34 +1,69 @@
-import React, { useState } from 'react';
-import CodeEditor from './components/CodeEditor';
+import React, {useState} from 'react';
+import CodeEditorView from './components/CodeEditorView';
 import LanguageSelector from './components/LanguageSelector';
 import ResultViewer from './components/ResultViewer';
+import SubmitButton from "./components/SubmitButton";
+import axios from "axios";
 
 const App = () => {
     const [code, setCode] = useState('');
-    const [selectedLanguage, setSelectedLanguage] = useState('JavaScript');
+    const [languageId, setLanguageId] = useState(1);
+    const [languageName, setLanguageName] = useState('');
     const [result, setResult] = useState('');
 
     const handleCodeChange = (newCode) => {
         setCode(newCode);
     };
 
-    const handleLanguageChange = (newLanguage) => {
-        setSelectedLanguage(newLanguage);
+    const handleLanguageChange = (newLanguageId, newLanguageName) => {
+        setLanguageId(newLanguageId);
+        setLanguageName(newLanguageName)
     };
+
 
     const handleRunCode = () => {
-        // 여기서 서버로 데이터를 보내고, 결과를 받아와서 setResult로 설정
-        // 서버 요청은 예를 들면 fetch를 사용하거나 axios를 이용할 수 있습니다.
+        let token = '';
+
+        const formData = new FormData();
+        formData.append('source_code', code);
+        formData.append('language_id', languageId);
+
+        axios.post('http://34.64.34.50/submissions?base64_encoded=false&wait=false', formData)
+            .then(response => {
+                const token = response.data.token;
+
+                setTimeout(() => {
+                    const url = `http://34.64.34.50/submissions/${token}?base64_encoded=false&fields=stderr,stdout,status_id,language_id`;
+
+                    axios.get(url)
+                        .then(response => {
+                            setResult(response.data.stdout);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching result:', error);
+                        });
+                }, 1000);
+            })
+            .catch(error => {
+                console.error('Error fetching token:', error);
+            });
     };
 
+
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', width: '70%' }}>
-                <CodeEditor onCodeChange={handleCodeChange} />
-                <LanguageSelector onLanguageChange={handleLanguageChange} />
+        <div style={{backgroundColor: "gainsboro", height: '100vh', width: '100%'}}>
+            <div style={{backgroundColor: "gray", height: '10vh', width: '100%'}}>
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: "lightgray", height: '50%', width: '100%'}}>
+                    <LanguageSelector onChange={handleLanguageChange} />
+                    <SubmitButton onClick={handleRunCode} />
+                </div>
             </div>
-            <button onClick={handleRunCode} style={{ marginTop: '10px' }}>전송</button>
-            <ResultViewer result={result} />
+            <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                <div style={{width: '70%', alignItems: 'center'}}>
+                    <CodeEditorView onChange={handleCodeChange} language={languageName} />
+                    <ResultViewer result={result} />
+                </div>
+            </div>
         </div>
     );
 };

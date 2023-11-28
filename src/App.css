@@ -36,3 +36,18 @@
     transform: rotate(360deg);
   }
 }
+
+.buttonWithImage {
+  background-image: url("button.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: none;
+  width: 80px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.buttonWithImage:hover {
+  background-image: url("button2.png");
+}
