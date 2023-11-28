@@ -37,7 +37,8 @@ const App = () => {
 
                     axios.get(url)
                         .then(response => {
-                            setResult(response.data.stdout);
+                            const result = response.data.stdout
+                            setResult(result === null ? 'error' : result);
                         })
                         .catch(error => {
                             console.error('Error fetching result:', error);
